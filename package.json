@@ -1,0 +1,66 @@
+{
+  "name": "opencode-go-rolling-usage",
+  "version": "0.1.0",
+  "description": "CLI + TUI plugin to monitor OpenCode Go rolling (5h), weekly and monthly subscription quota",
+  "main": "dist/index.js",
+  "bin": {
+    "opencode-go-rolling-usage": "dist/index.js",
+    "ogr": "dist/index.js"
+  },
+  "files": [
+    "dist",
+    "src/tui.tsx",
+    "README.md",
+    "README.es.md"
+  ],
+  "scripts": {
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand",
+    "test:coverage": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand --coverage",
+    "build": "NODE_ENV=production babel src --out-dir dist --extensions .js",
+    "lint": "eslint src --ext .js",
+    "format": "prettier --write \"src/**/*.js\" \"test/**/*.js\"",
+    "format:check": "prettier --check \"src/**/*.js\" \"test/**/*.js\"",
+    "prepublishOnly": "pnpm run build"
+  },
+  "keywords": [
+    "opencode",
+    "opencode-go",
+    "quota",
+    "usage",
+    "rolling",
+    "cli",
+    "tui",
+    "rate-limit"
+  ],
+  "author": "caertos",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Caertos/opencode-go-rolling-usage.git"
+  },
+  "homepage": "https://github.com/Caertos/opencode-go-rolling-usage#readme",
+  "bugs": {
+    "url": "https://github.com/Caertos/opencode-go-rolling-usage/issues"
+  },
+  "type": "module",
+  "packageManager": "pnpm@12.9.1",
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "chalk": "^6.0.0"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.28.3",
+    "@babel/core": "^7.28.4",
+    "@babel/preset-env": "^7.22.20",
+    "babel-jest": "^30.5.1",
+    "eslint": "^8.50.0",
+    "eslint-config-prettier": "^10.1.8",
+    "jest": "^30.5.2",
+    "prettier": "^3.8.3"
+  }
+}
