@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.4] - 2026-10-08
+
+### Fixed
+
+- The TUI plugin is now compiled ahead of time (`src/tui.tsx` -> `dist/tui.js`)
+  with explicit `@opentui/solid` imports. OpenCode loads npm plugins by resolving
+  explicit imports from the plugin location; a bare `@jsxImportSource` pragma is
+  only resolved for local file plugins, so the plugin previously failed to load
+  from OpenCode's plugin cache.
+
 ## [0.1.3] - 2026-10-08
 
 ### Fixed
