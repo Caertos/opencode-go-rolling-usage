@@ -59,7 +59,19 @@ jobs:
             exit 1
           fi
 
+      - name: Check if version is already on npm
+        id: published
+        run: |
+          VERSION="$(node -p "require('./package.json').version")"
+          if npm view "opencode-go-rolling-usage@${VERSION}" version >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::opencode-go-rolling-usage@${VERSION} already exists on npm; skipping publish."
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Publish to npm (trusted publishing / OIDC)
+        if: steps.published.outputs.exists == 'false'
         # No static token on purpose: with none configured, pnpm performs the
         # OIDC exchange against the npm trusted publisher. --no-git-checks: the
         # runner is at a detached HEAD on the tag. --publish-wait-timeout: wait
