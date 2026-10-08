@@ -4,12 +4,14 @@
 import { readFileSync } from 'node:fs';
 import { resolveApiKey, fetchUsage, UsageError } from './usage.js';
 import { renderUsage } from './render.js';
+import { registerPlugin } from './setup.js';
 
 const HELP = `opencode-go-rolling-usage (ogr) — OpenCode Go quota in your terminal
 
 Usage:
   opencode-go-rolling-usage [show] [options]
   ogr [show] [options]
+  opencode-go-rolling-usage setup
   opencode-go-rolling-usage help
   opencode-go-rolling-usage version
 
@@ -72,6 +74,19 @@ async function main() {
   if (opts.version || command === 'version') {
     process.stdout.write(`${readVersion()}\n`);
     return 0;
+  }
+  if (command === 'setup') {
+    const result = await registerPlugin();
+    if (result.ok) {
+      process.stdout.write(
+        result.changed
+          ? `Registered the OpenCode TUI plugin in ${result.file}\n`
+          : `The OpenCode TUI plugin is already registered in ${result.file}\n`
+      );
+      return 0;
+    }
+    process.stderr.write(`Could not register the plugin: ${result.reason}\n`);
+    return 1;
   }
   if (command !== 'show') {
     process.stderr.write(`unknown command: ${command}\n\n${HELP}\n`);

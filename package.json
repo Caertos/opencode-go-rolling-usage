@@ -1,15 +1,22 @@
 {
   "name": "opencode-go-rolling-usage",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "CLI + TUI plugin to monitor OpenCode Go rolling (5h), weekly and monthly subscription quota",
   "main": "dist/index.js",
+  "exports": {
+    ".": "./src/server.js",
+    "./server": "./src/server.js",
+    "./tui": "./src/tui.tsx"
+  },
   "bin": {
     "opencode-go-rolling-usage": "dist/index.js",
     "ogr": "dist/index.js"
   },
   "files": [
     "dist",
+    "scripts",
     "src/tui.tsx",
+    "src/server.js",
     "README.md",
     "README.es.md"
   ],
@@ -20,7 +27,8 @@
     "lint": "eslint src --ext .js",
     "format": "prettier --write \"src/**/*.js\" \"test/**/*.js\"",
     "format:check": "prettier --check \"src/**/*.js\" \"test/**/*.js\"",
-    "prepublishOnly": "pnpm run build"
+    "prepublishOnly": "pnpm run build",
+    "postinstall": "node scripts/postinstall.mjs"
   },
   "keywords": [
     "opencode",
