@@ -185,19 +185,37 @@ Los pull requests son bienvenidos. Mantén los tests en verde y ejecuta
 
 ### Publicación
 
-La publicación ocurre en CI:
+La publicación usa **Trusted Publishing (OIDC)** de npm — **sin token secreto**.
+Se ejecuta el workflow `publish.yml` con los tags `v*`. La procedencia
+(provenance) se genera automáticamente.
 
-1. Sube la versión en `package.json`.
+Configuración única en npmjs.com (paquete → **Settings → Trusted Publisher →
+GitHub Actions**):
+
+| Campo              | Valor                        |
+| ------------------ | ---------------------------- |
+| Organización/usuario | `Caertos`                  |
+| Repositorio        | `opencode-go-rolling-usage`  |
+| Archivo de workflow| `publish.yml`                |
+
+> El paquete debe existir en npm antes de poder configurar el trusted publisher.
+> Para la primera release, publica una vez de forma manual (`npm login` +
+> `npm publish`), luego agrega el trusted publisher y usa el flujo por tag.
+
+Luego, para cada release:
+
+1. Sube la `version` en `package.json` y agrega una entrada en `CHANGELOG.md`.
 2. Crea el tag y haz push:
    ```bash
    git tag v0.1.0
    git push origin v0.1.0
    ```
-3. El workflow **Release** compila y ejecuta `npm publish --provenance`
-   (requiere el secreto `NPM_TOKEN`).
-4. **Homebrew:** ejecuta el workflow **Bump Homebrew formula** con la versión
-   publicada. Actualiza `url` + `sha256` en el tap y abre un PR. Requiere un
-   repo `homebrew-tap` y el secreto `HOMEBREW_TAP_TOKEN`.
+3. El workflow **Publish** corre lint/format/tests, publica en npm con
+   procedencia y crea el GitHub Release.
+
+**Homebrew:** ejecuta el workflow **Bump Homebrew formula** con la versión
+publicada. Actualiza `url` + `sha256` en el tap y abre un PR. Requiere un repo
+`homebrew-tap` y el secreto `HOMEBREW_TAP_TOKEN`.
 
 ## Notas
 
