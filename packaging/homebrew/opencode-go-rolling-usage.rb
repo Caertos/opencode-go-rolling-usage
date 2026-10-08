@@ -20,6 +20,9 @@ class OpencodeGoRollingUsage < Formula
   def post_install
     # Register the TUI plugin in the user's OpenCode tui.json so that opening
     # OpenCode is enough after installing. Best-effort; never fail the install.
+    # NOTE: Homebrew runs post_install under a sandbox that denies writes
+    # outside the prefix, so this usually cannot touch ~/.config. The `caveats`
+    # below tell the user to run `ogr setup` in that case.
     script = libexec/"lib/node_modules/opencode-go-rolling-usage/scripts/postinstall.mjs"
     return unless script.exist?
 
@@ -27,6 +30,17 @@ class OpencodeGoRollingUsage < Formula
     system({ "OPENCODE_GO_ROLLING_USAGE_SETUP" => "1" }, node, script.to_s)
   rescue StandardError
     nil
+  end
+
+  def caveats
+    <<~EOS
+      To show the OpenCode Go quota widget inside the OpenCode TUI, register the
+      plugin once (Homebrew's sandbox prevents this from happening automatically):
+
+        ogr setup
+
+      Then restart OpenCode.
+    EOS
   end
 
   test do

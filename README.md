@@ -104,21 +104,23 @@ In order of precedence:
 
 If no key is found, run `opencode auth login` first.
 
-## TUI plugin
+## TUI plugin (sidebar widget)
 
-Add the plugin to your OpenCode `tui.json` (replace the path with where the
-package is installed, e.g. under your global `node_modules`):
+The package ships an OpenCode TUI plugin and registers it in your
+`~/.config/opencode/tui.json` automatically:
 
-```json
-{
-  "$schema": "https://opencode.ai/tui.json",
-  "plugin": ["/path/to/opencode-go-rolling-usage/src/tui.tsx"]
-}
-```
+- **npm** — the `postinstall` hook registers it for you, so opening OpenCode is
+  enough.
+- **pnpm** — pnpm blocks install scripts by default; run `pnpm approve-builds`
+  once (or run `ogr setup`).
+- **Homebrew** — run `ogr setup` once; Homebrew's sandbox prevents the formula
+  from writing to your OpenCode config.
 
-Restart the TUI. The widget appears in the session sidebar and refreshes on
-every `session.idle` and every 90 seconds. It reads the same key sources as the
-CLI and **hides itself** when no key is configured.
+`ogr setup` adds `opencode-go-rolling-usage` to the `plugin` array of `tui.json`
+(idempotent and safe; it never touches anything else). Then just restart
+OpenCode: the widget appears in the session sidebar and refreshes on every
+`session.idle` and every 90 seconds. It reads the same key sources as the CLI and
+**hides itself** when no key is configured.
 
 ## Development
 

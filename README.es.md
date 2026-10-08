@@ -103,21 +103,22 @@ Por orden de precedencia:
 
 Si no encuentra key, ejecuta primero `opencode auth login`.
 
-## Plugin TUI
+## Plugin TUI (widget del sidebar)
 
-Agrega el plugin a tu `tui.json` de OpenCode (reemplaza la ruta por donde esté
-instalado el paquete, p. ej. bajo tu `node_modules` global):
+El paquete incluye un plugin de la TUI de OpenCode y lo registra en tu
+`~/.config/opencode/tui.json` automáticamente:
 
-```json
-{
-  "$schema": "https://opencode.ai/tui.json",
-  "plugin": ["/ruta/a/opencode-go-rolling-usage/src/tui.tsx"]
-}
-```
+- **npm** — el hook `postinstall` lo registra, así que basta con abrir OpenCode.
+- **pnpm** — pnpm bloquea los scripts de instalación por defecto; ejecuta
+  `pnpm approve-builds` una vez (o `ogr setup`).
+- **Homebrew** — ejecuta `ogr setup` una vez; el sandbox de Homebrew impide que
+  la fórmula escriba en tu configuración de OpenCode.
 
-Reinicia la TUI. El widget aparece en el sidebar de la sesión y se refresca en
-cada `session.idle` y cada 90 segundos. Usa las mismas fuentes de key que el CLI
-y **se oculta** cuando no hay key configurada.
+`ogr setup` agrega `opencode-go-rolling-usage` al arreglo `plugin` de `tui.json`
+(idempotente y seguro; no toca nada más). Luego solo reinicia OpenCode: el widget
+aparece en el sidebar de la sesión y se refresca en cada `session.idle` y cada
+90 segundos. Usa las mismas fuentes de key que el CLI y **se oculta** cuando no
+hay key configurada.
 
 ## Desarrollo
 
