@@ -1,6 +1,6 @@
 {
   "name": "opencode-go-rolling-usage",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "CLI + TUI plugin to monitor OpenCode Go rolling (5h), weekly and monthly subscription quota",
   "main": "dist/index.js",
   "exports": {

@@ -22,22 +22,49 @@ export class UsageError extends Error {
 }
 
 /**
- * Where OpenCode stores its credentials. Honors `OPENCODE_AUTH_JSON` and
- * `XDG_DATA_HOME`, otherwise the Linux/macOS default under the home directory.
+ * Candidate locations of OpenCode's credentials file, in order of precedence.
+ * Honors `OPENCODE_AUTH_JSON`, then the platform data dir:
+ *   - Linux:   $XDG_DATA_HOME/opencode/auth.json or ~/.local/share/opencode/auth.json
+ *   - macOS:   ~/Library/Application Support/opencode/auth.json
+ *   - Windows: %LOCALAPPDATA%\opencode\auth.json
  */
-export function authFilePath(env = process.env) {
+export function authFileCandidates(env = process.env) {
   if (env.OPENCODE_AUTH_JSON && env.OPENCODE_AUTH_JSON.trim()) {
-    return env.OPENCODE_AUTH_JSON.trim();
+    return [env.OPENCODE_AUTH_JSON.trim()];
   }
-  const base =
-    (env.XDG_DATA_HOME && env.XDG_DATA_HOME.trim()) ||
-    join(homedir(), '.local', 'share');
-  return join(base, 'opencode', 'auth.json');
+  const home = homedir();
+  const candidates = [];
+  if (env.XDG_DATA_HOME && env.XDG_DATA_HOME.trim()) {
+    candidates.push(join(env.XDG_DATA_HOME.trim(), 'opencode', 'auth.json'));
+  }
+  switch (process.platform) {
+    case 'darwin':
+      candidates.push(
+        join(home, 'Library', 'Application Support', 'opencode', 'auth.json')
+      );
+      break;
+    case 'win32':
+      candidates.push(
+        join(
+          env.LOCALAPPDATA || join(home, 'AppData', 'Local'),
+          'opencode',
+          'auth.json'
+        )
+      );
+      break;
+  }
+  candidates.push(join(home, '.local', 'share', 'opencode', 'auth.json'));
+  return [...new Set(candidates)];
+}
+
+/** The primary credentials path (first candidate). */
+export function authFilePath(env = process.env) {
+  return authFileCandidates(env)[0];
 }
 
 /**
  * Resolve the Go API key from (in order): `OPENCODE_API_KEY`, then the
- * `opencode-go` entry in auth.json, then the `opencode` fallback.
+ * `opencode-go` entry in any auth.json candidate, then the `opencode` fallback.
  * Returns `{ apiKey, source }` or `undefined` when nothing is configured.
  */
 export async function resolveApiKey(options = {}) {
@@ -47,19 +74,21 @@ export async function resolveApiKey(options = {}) {
   const fromEnv = env.OPENCODE_API_KEY && env.OPENCODE_API_KEY.trim();
   if (fromEnv) return { apiKey: fromEnv, source: 'env' };
 
-  const file = options.authFile || authFilePath(env);
-  let parsed;
-  try {
-    parsed = JSON.parse(await reader(file, 'utf8'));
-  } catch {
-    return undefined;
-  }
-  for (const provider of ['opencode-go', 'opencode']) {
-    const entry = parsed && parsed[provider];
-    if (!entry || typeof entry !== 'object') continue;
-    const key = typeof entry.key === 'string' ? entry.key : entry.apiKey;
-    if (typeof key === 'string' && key.trim()) {
-      return { apiKey: key.trim(), source: 'auth' };
+  const files = options.authFile ? [options.authFile] : authFileCandidates(env);
+  for (const file of files) {
+    let parsed;
+    try {
+      parsed = JSON.parse(await reader(file, 'utf8'));
+    } catch {
+      continue;
+    }
+    for (const provider of ['opencode-go', 'opencode']) {
+      const entry = parsed && parsed[provider];
+      if (!entry || typeof entry !== 'object') continue;
+      const key = typeof entry.key === 'string' ? entry.key : entry.apiKey;
+      if (typeof key === 'string' && key.trim()) {
+        return { apiKey: key.trim(), source: 'auth' };
+      }
     }
   }
   return undefined;

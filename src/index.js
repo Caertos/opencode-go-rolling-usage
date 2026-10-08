@@ -15,6 +15,11 @@ Usage:
   opencode-go-rolling-usage help
   opencode-go-rolling-usage version
 
+Commands:
+  show     Print the quota table (default)
+  setup    Register the OpenCode TUI plugin in your tui.json
+           (safe and idempotent; run it if the install postinstall did not)
+
 Options:
   --json            Print the raw usage payload as JSON
   --key <key>       Use this API key instead of the stored one

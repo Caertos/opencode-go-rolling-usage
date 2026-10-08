@@ -61,25 +61,41 @@ const WINDOWS: ReadonlyArray<{ key: keyof GoUsage; label: string }> = [
   { key: "monthly", label: "Monthly" },
 ]
 
-function authFilePath(): string {
-  if (process.env.OPENCODE_AUTH_JSON?.trim()) return process.env.OPENCODE_AUTH_JSON.trim()
-  const base = process.env.XDG_DATA_HOME?.trim() || join(homedir(), ".local", "share")
-  return join(base, "opencode", "auth.json")
+function authFileCandidates(): string[] {
+  if (process.env.OPENCODE_AUTH_JSON?.trim()) return [process.env.OPENCODE_AUTH_JSON.trim()]
+  const home = homedir()
+  const candidates: string[] = []
+  if (process.env.XDG_DATA_HOME?.trim()) {
+    candidates.push(join(process.env.XDG_DATA_HOME.trim(), "opencode", "auth.json"))
+  }
+  switch (process.platform) {
+    case "darwin":
+      candidates.push(join(home, "Library", "Application Support", "opencode", "auth.json"))
+      break
+    case "win32":
+      candidates.push(
+        join(process.env.LOCALAPPDATA || join(home, "AppData", "Local"), "opencode", "auth.json"),
+      )
+      break
+  }
+  candidates.push(join(home, ".local", "share", "opencode", "auth.json"))
+  return [...new Set(candidates)]
 }
 
 async function resolveApiKey(): Promise<string | undefined> {
   const fromEnv = process.env.OPENCODE_API_KEY?.trim()
   if (fromEnv) return fromEnv
-  try {
-    const raw = await readFile(authFilePath(), "utf8")
-    const parsed = JSON.parse(raw)
-    for (const provider of ["opencode-go", "opencode"]) {
-      const entry = parsed?.[provider]
-      const key = typeof entry?.key === "string" ? entry.key : entry?.apiKey
-      if (typeof key === "string" && key.trim()) return key.trim()
+  for (const file of authFileCandidates()) {
+    try {
+      const parsed = JSON.parse(await readFile(file, "utf8"))
+      for (const provider of ["opencode-go", "opencode"]) {
+        const entry = parsed?.[provider]
+        const key = typeof entry?.key === "string" ? entry.key : entry?.apiKey
+        if (typeof key === "string" && key.trim()) return key.trim()
+      }
+    } catch {
+      // try the next candidate location
     }
-  } catch {
-    return undefined
   }
   return undefined
 }

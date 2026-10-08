@@ -41,6 +41,10 @@ OpenCode Go usage
 - **Node.js >= 18** — el CLI usa el `fetch` global.
 - **Una suscripción de OpenCode Go** con la API key guardada — ejecuta
   `opencode auth login` una vez, o exporta `OPENCODE_API_KEY`.
+- **Linux, macOS o Windows** — las mismas plataformas que la TUI de OpenCode. Las
+  credenciales se buscan en el directorio de datos de la plataforma
+  (`~/.local/share`, `~/Library/Application Support`, `%LOCALAPPDATA%`), y la
+  config de la TUI en `$XDG_CONFIG_HOME`/`~/.config/opencode`.
 
 ## Instalación
 
@@ -119,6 +123,47 @@ El paquete incluye un plugin de la TUI de OpenCode y lo registra en tu
 aparece en el sidebar de la sesión y se refresca en cada `session.idle` y cada
 90 segundos. Usa las mismas fuentes de key que el CLI y **se oculta** cuando no
 hay key configurada.
+
+### Si el plugin no se registró
+
+El hook `postinstall` puede saltarse — por ejemplo cuando pnpm bloquea los
+scripts de instalación, cuando el sandbox de Homebrew lo impide, con
+`npm install --ignore-scripts`, o en un CI/política que desactiva scripts. Si
+ocurre, registra el plugin tú mismo. Cualquiera de estas sirve:
+
+```bash
+# 1. Deja que el CLI lo haga (idempotente y seguro)
+ogr setup
+
+# 2. Deja que pnpm ejecute el postinstall de este paquete
+pnpm approve-builds           # elige opencode-go-rolling-usage y reinstala
+```
+
+O agrégalo a mano — edita `~/.config/opencode/tui.json` y pon el paquete en el
+arreglo `plugin`:
+
+```json
+{
+  "$schema": "https://opencode.ai/tui.json",
+  "plugin": ["opencode-go-rolling-usage"]
+}
+```
+
+Luego reinicia OpenCode.
+
+**Verifica** que quedó registrado (imprime "already registered" si no cambia
+nada):
+
+```bash
+ogr setup
+```
+
+**Deshacer:** quita `"opencode-go-rolling-usage"` del arreglo `plugin`, o borra la
+entrada que agregaste.
+
+Notas: `ogr setup` respeta `OPENCODE_TUI_CONFIG` y `XDG_CONFIG_HOME`, solo toca el
+arreglo `plugin`, y deja intacto un `tui.jsonc` que tenga comentarios (lo informa
+en vez de reescribirlo).
 
 ## Desarrollo
 

@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.2] - 2026-10-08
+
+### Added
+
+- Documented what to do when the `postinstall` hook does not run (pnpm's script
+  gate, Homebrew's sandbox, `npm install --ignore-scripts`, CI) — run `ogr setup`
+  or add the package to `tui.json` by hand. `ogr --help` now describes the `setup`
+  command.
+
 ## [0.1.1] - 2026-10-08
 
 ### Added
