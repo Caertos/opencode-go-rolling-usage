@@ -1,6 +1,6 @@
 {
   "name": "opencode-go-rolling-usage",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "CLI + TUI plugin to monitor OpenCode Go rolling (5h), weekly and monthly subscription quota",
   "main": "dist/index.js",
   "exports": {
@@ -60,6 +60,12 @@
   },
   "dependencies": {
     "chalk": "^6.0.0"
+  },
+  "peerDependencies": {
+    "@opencode-ai/plugin": ">=1.14.50 <2",
+    "@opentui/core": ">=0.4.0 <0.6",
+    "@opentui/solid": ">=0.4.0 <0.6",
+    "solid-js": ">=1.9.12 <2"
   },
   "devDependencies": {
     "@babel/cli": "^7.28.3",
