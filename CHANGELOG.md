@@ -6,6 +6,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2026-10-11
+
+### Added
+
+- Support for OpenCode **v1 and v2** from the same package. `dist/tui.js` now
+  targets both plugin APIs (`setup` for v2, `tui` for v1) without importing a
+  plugin core package, so one installed version works on either runtime.
+
+### Changed
+
+- `ogr setup` (and the `postinstall` hook) now registers the plugin in both the
+  v2 `~/.config/opencode/cli.json` (`plugins`) and the v1
+  `~/.config/opencode/tui.json` (`plugin`), whichever exists.
+- `peerDependencies` no longer require `@opencode/plugin` /
+  `@opencode-ai/plugin` (the plugin core is not imported at runtime);
+  `@opentui/core` / `@opentui/solid` now require `>=0.5.10`.
+
+### Fixed
+
+- Restored OpenCode v1 support that the 0.2.0 v2-only port had dropped.
+
 ## [0.2.0] - 2026-10-11
 
 ### Changed

@@ -109,8 +109,8 @@ Si no encuentra key, ejecuta primero `opencode auth login`.
 
 ## Plugin TUI (widget del sidebar)
 
-El paquete incluye un plugin **CLI de OpenCode v2** y lo registra en tu
-`~/.config/opencode/cli.json` automáticamente:
+El paquete incluye un plugin de OpenCode que funciona en **OpenCode v1 y v2**, y
+lo registra en tu configuración automáticamente:
 
 - **npm** — el hook `postinstall` lo registra, así que basta con abrir OpenCode.
 - **pnpm** — pnpm bloquea los scripts de instalación por defecto; ejecuta
@@ -119,10 +119,11 @@ El paquete incluye un plugin **CLI de OpenCode v2** y lo registra en tu
   la fórmula escriba en tu configuración de OpenCode.
 
 `ogr setup` agrega `opencode-go-rolling-usage` al arreglo `plugins` de
-`cli.json` (idempotente y seguro; no toca nada más). Luego solo reinicia
-OpenCode: el widget aparece en el sidebar de la sesión y se refresca en cada
-`session.idle` y cada 90 segundos. Usa las mismas fuentes de key que el CLI y
-**se oculta** cuando no hay key configurada.
+`~/.config/opencode/cli.json` (OpenCode v2) y al arreglo `plugin` de
+`~/.config/opencode/tui.json` (OpenCode v1) — idempotente y seguro; no toca nada
+más. Luego solo reinicia OpenCode: el widget aparece en el sidebar de la sesión y
+se refresca en cada `session.idle` y cada 90 segundos. Usa las mismas fuentes de
+key que el CLI y **se oculta** cuando no hay key configurada.
 
 ### Si el plugin no se registró
 
@@ -139,13 +140,21 @@ ogr setup
 pnpm approve-builds           # elige opencode-go-rolling-usage y reinstala
 ```
 
-O agrégalo a mano — edita `~/.config/opencode/cli.json` y pon el paquete en el
-arreglo `plugins`:
+O agrégalo a mano. En **OpenCode v2**, edita `~/.config/opencode/cli.json`:
 
 ```json
 {
   "$schema": "https://opencode.ai/v2/cli.json",
   "plugins": ["opencode-go-rolling-usage"]
+}
+```
+
+En **OpenCode v1**, edita `~/.config/opencode/tui.json`:
+
+```json
+{
+  "$schema": "https://opencode.ai/tui.json",
+  "plugin": ["opencode-go-rolling-usage"]
 }
 ```
 
@@ -158,12 +167,12 @@ nada):
 ogr setup
 ```
 
-**Deshacer:** quita `"opencode-go-rolling-usage"` del arreglo `plugins`, o borra
-la entrada que agregaste.
+**Deshacer:** quita `"opencode-go-rolling-usage"` del arreglo `plugins` (v2) o
+`plugin` (v1), o borra la entrada que agregaste.
 
-Notas: `ogr setup` respeta `XDG_CONFIG_HOME`, solo toca el arreglo `plugins`, y
-deja intacto un `cli.json` que no sea JSON plano (lo informa en vez de
-reescribirlo).
+Notas: `ogr setup` respeta `XDG_CONFIG_HOME` (y `OPENCODE_TUI_CONFIG` para el
+archivo de v1), solo toca el arreglo de plugins en cada config, y deja intacto un
+archivo que no sea JSON plano (lo informa en vez de reescribirlo).
 
 ## Desarrollo
 
@@ -210,7 +219,7 @@ src/
   usage.js    resolución de la API key + cliente del endpoint de uso
   render.js   render de terminal (chalk)
   index.js    entry point del CLI (bin)
-  tui.tsx     plugin CLI de OpenCode v2 (autocontenido, un solo archivo)
+  tui.tsx     plugin de OpenCode v1/v2 (autocontenido, un solo archivo)
 test/
   format.test.js
   usage.test.js

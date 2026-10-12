@@ -17,8 +17,8 @@ Usage:
 
 Commands:
   show     Print the quota table (default)
-  setup    Register the OpenCode CLI plugin in your cli.json
-           (safe and idempotent; run it if the install postinstall did not)
+  setup    Register the OpenCode plugin in your config
+           (cli.json for OpenCode v2, tui.json for v1; safe and idempotent)
 
 Options:
   --json            Print the raw usage payload as JSON
@@ -82,16 +82,23 @@ async function main() {
   }
   if (command === 'setup') {
     const result = await registerPlugin();
-    if (result.ok) {
-      process.stdout.write(
-        result.changed
-          ? `Registered the OpenCode CLI plugin in ${result.file}\n`
-          : `The OpenCode CLI plugin is already registered in ${result.file}\n`
-      );
-      return 0;
+    const entries = result.files || [result];
+    for (const entry of entries) {
+      if (entry.ok === false) {
+        process.stderr.write(
+          `Could not register the plugin in ${entry.file}: ${entry.reason}\n`
+        );
+      } else if (entry.changed) {
+        process.stdout.write(
+          `Registered the OpenCode plugin in ${entry.file}\n`
+        );
+      } else {
+        process.stdout.write(
+          `The OpenCode plugin is already registered in ${entry.file}\n`
+        );
+      }
     }
-    process.stderr.write(`Could not register the plugin: ${result.reason}\n`);
-    return 1;
+    return result.ok ? 0 : 1;
   }
   if (command !== 'show') {
     process.stderr.write(`unknown command: ${command}\n\n${HELP}\n`);

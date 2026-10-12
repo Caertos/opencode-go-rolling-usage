@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 // npm/pnpm postinstall hook.
 //
-// Registers the OpenCode CLI plugin in the user's cli.json so that opening
-// OpenCode is enough after installing. Best-effort and silent: it must never
-// break an install.
+// Registers the OpenCode plugin in the user's config (cli.json for OpenCode v2,
+// tui.json for v1) so that opening OpenCode is enough after installing.
+// Best-effort and silent: it must never break an install.
 //
 // It only acts on global installs (npm_config_global) or when explicitly
 // forced with OPENCODE_GO_ROLLING_USAGE_SETUP=1 (the Homebrew formula does
