@@ -2,19 +2,18 @@
 /**
  * @jsxImportSource @opentui/solid
  *
- * OpenCode TUI plugin: renders the OpenCode Go quota (rolling 5h / weekly /
+ * OpenCode v2 CLI plugin: renders the OpenCode Go quota (rolling 5h / weekly /
  * monthly) in the session sidebar.
  *
  * This file is intentionally self-contained (no local imports) so OpenCode's
- * plugin loader can load it as a single portable file, exactly like the copy
- * that was verified in ~/.config/opencode/tui-plugins/. The same numbers and
+ * plugin loader can load it as a single portable file. The same numbers and
  * color scale also live in src/format.js for the CLI.
  *
- * Register it in tui.json:
- *   { "plugin": ["/abs/path/to/opencode-go-usage/src/tui.tsx"] }
+ * Register it in cli.json (OpenCode v2):
+ *   { "plugins": ["opencode-go-rolling-usage"] }
  */
 
-import type { TuiPlugin } from "@opencode-ai/plugin/tui"
+import { Plugin, usePlugin } from "@opencode/plugin/tui"
 import { createSignal, For, Show, type Accessor } from "solid-js"
 import { readFile } from "node:fs/promises"
 import { homedir } from "node:os"
@@ -29,13 +28,6 @@ const BAR_WIDTH = 22
 const LEVEL_YELLOW_PCT = 40
 const LEVEL_ORANGE_PCT = 60
 const LEVEL_RED_PCT = 80
-// Color scale: verde <40%, amarillo 40-60%, naranja 60-80%, rojo >=80%.
-// Note: this opentui build applies `fg` only to <text> elements — a `fg` on a
-// nested <span> is silently ignored, so every colored segment is its own <text>.
-const COLOR_GREEN = "#3fb950"
-const COLOR_YELLOW = "#e3b341"
-const COLOR_ORANGE = "#f0883e"
-const COLOR_RED = "#f85149"
 
 interface UsageWindow {
   status?: string
@@ -146,23 +138,23 @@ function countdown(resetsAt: string | undefined, now: number): string {
   return `${minutes}m`
 }
 
-function levelColor(percent: number): string {
+// Maps the quota color scale onto the resolved theme tokens (all values are
+// opentui RGBA). OpenCode's theme exposes green/yellow/red feedback tokens and
+// an orange hue scale, which covers the four levels.
+function levelColor(percent: number, theme: any): any {
   const p = clamp(percent)
-  if (p >= LEVEL_RED_PCT) return COLOR_RED
-  if (p >= LEVEL_ORANGE_PCT) return COLOR_ORANGE
-  if (p >= LEVEL_YELLOW_PCT) return COLOR_YELLOW
-  return COLOR_GREEN
+  if (p >= LEVEL_RED_PCT) return theme.text.feedback.error.default
+  if (p >= LEVEL_ORANGE_PCT) return theme.hue.orange[700]
+  if (p >= LEVEL_YELLOW_PCT) return theme.text.feedback.warning.default
+  return theme.text.feedback.success.default
 }
 
-function Row(props: {
-  label: string
-  get: () => UsageWindow | undefined
-  theme: any
-  now: number
-}) {
+function Row(props: { label: string; get: () => UsageWindow | undefined; now: number }) {
+  const ctx = usePlugin()
+  const theme = () => ctx.theme
   const percent = () => clamp(props.get()?.percent ?? 0)
   const has = () => typeof props.get()?.percent === "number"
-  const color = () => levelColor(percent())
+  const color = () => levelColor(percent(), theme())
   const bars = () => progressBar(percent())
   const reset = () => countdown(props.get()?.resetsAt, props.now)
 
@@ -170,22 +162,24 @@ function Row(props: {
     <box flexDirection="column" marginBottom={1}>
       <box flexDirection="row" justifyContent="space-between">
         <box flexDirection="row">
-          <text fg={props.theme.textMuted}>{props.label.padEnd(8)}</text>
-          <text fg={has() ? color() : props.theme.textMuted} bg={props.theme.backgroundElement}>
+          <text fg={theme().text.subdued}>{props.label.padEnd(8)}</text>
+          <text fg={has() ? color() : theme().text.subdued} bg={theme().background.surface.offset}>
             {has() ? ` ${percent()}% used ` : "   —   "}
           </text>
         </box>
-        <text fg={props.theme.textMuted}>{reset() ? `resets ${reset()}` : ""}</text>
+        <text fg={theme().text.subdued}>{reset() ? `resets ${reset()}` : ""}</text>
       </box>
       <box flexDirection="row">
         <text fg={color()}>{bars().filled}</text>
-        <text fg={props.theme.border}>{bars().empty}</text>
+        <text fg={theme().border.default}>{bars().empty}</text>
       </box>
     </box>
   )
 }
 
-function GoUsageWidget(props: { snapshot: Accessor<Snapshot>; theme: any }) {
+function GoUsageWidget(props: { snapshot: Accessor<Snapshot> }) {
+  const ctx = usePlugin()
+  const theme = () => ctx.theme
   const snap = () => props.snapshot()
   const usage = () => (snap().status === "ok" ? snap().usage : undefined)
   const now = () => (snap().status === "ok" ? snap().at : Date.now())
@@ -194,21 +188,19 @@ function GoUsageWidget(props: { snapshot: Accessor<Snapshot>; theme: any }) {
     <Show when={snap().status !== "hidden"}>
       <box flexDirection="column">
         <box flexDirection="row">
-          <text fg={props.theme.text}>Go usage</text>
-          <text fg={props.theme.textMuted}> · quota</text>
+          <text fg={theme().text.default}>Go usage</text>
+          <text fg={theme().text.subdued}> · quota</text>
         </box>
         <Show
           when={snap().status === "ok"}
           fallback={
-            <text fg={props.theme.textMuted}>
+            <text fg={theme().text.subdued}>
               {snap().status === "error" ? "usage unavailable" : "loading…"}
             </text>
           }
         >
           <For each={WINDOWS}>
-            {(w) => (
-              <Row label={w.label} get={() => usage()?.[w.key]} theme={props.theme} now={now()} />
-            )}
+            {(w) => <Row label={w.label} get={() => usage()?.[w.key]} now={now()} />}
           </For>
         </Show>
       </box>
@@ -216,56 +208,54 @@ function GoUsageWidget(props: { snapshot: Accessor<Snapshot>; theme: any }) {
   )
 }
 
-const tui: TuiPlugin = async (api) => {
-  const [snapshot, setSnapshot] = createSignal<Snapshot>({ status: "loading" })
-  let disposed = false
-  let apiKey: string | undefined
-  let keyLoaded = false
+const tui = Plugin.define({
+  id,
+  setup(api) {
+    const [snapshot, setSnapshot] = createSignal<Snapshot>({ status: "loading" })
+    let disposed = false
+    let apiKey: string | undefined
+    let keyLoaded = false
 
-  async function refresh() {
-    if (disposed) return
-    if (!keyLoaded) {
-      apiKey = await resolveApiKey()
-      keyLoaded = true
-    }
-    if (!apiKey) {
-      setSnapshot({ status: "hidden" })
-      return
-    }
-    try {
-      const usage = await fetchUsage(apiKey)
+    async function refresh() {
       if (disposed) return
-      setSnapshot({ status: "ok", usage, at: Date.now() })
-    } catch (error) {
-      if (disposed) return
-      const message = error instanceof Error ? error.message : String(error)
-      // Keep the last known values when a refresh fails.
-      if (snapshot().status === "ok") return
-      setSnapshot({ status: "error", message })
+      if (!keyLoaded) {
+        apiKey = await resolveApiKey()
+        keyLoaded = true
+      }
+      if (!apiKey) {
+        setSnapshot({ status: "hidden" })
+        return
+      }
+      try {
+        const usage = await fetchUsage(apiKey)
+        if (disposed) return
+        setSnapshot({ status: "ok", usage, at: Date.now() })
+      } catch (error) {
+        if (disposed) return
+        const message = error instanceof Error ? error.message : String(error)
+        // Keep the last known values when a refresh fails.
+        if (snapshot().status === "ok") return
+        setSnapshot({ status: "error", message })
+      }
     }
-  }
 
-  api.slots.register({
-    id,
-    order: 95,
-    slots: {
-      sidebar_content(ctx) {
-        return <GoUsageWidget snapshot={snapshot} theme={ctx.theme.current} />
-      },
-    },
-  })
+    const offSlot = api.ui.slot({
+      append: "sidebar.content",
+      render: () => <GoUsageWidget snapshot={snapshot} />,
+    })
 
-  const offIdle = api.event.on("session.idle", () => void refresh())
-  const timer = setInterval(() => void refresh(), REFRESH_MS)
+    const offIdle = api.data.on("session.idle", () => void refresh())
+    const timer = setInterval(() => void refresh(), REFRESH_MS)
 
-  api.lifecycle.onDispose(() => {
-    disposed = true
-    clearInterval(timer)
-    offIdle()
-  })
+    void refresh()
 
-  void refresh()
-}
+    return () => {
+      disposed = true
+      clearInterval(timer)
+      offIdle()
+      offSlot()
+    }
+  },
+})
 
-const plugin = { id, tui }
-export default plugin
+export default tui

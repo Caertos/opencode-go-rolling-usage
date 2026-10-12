@@ -6,6 +6,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2026-10-11
+
+### Changed
+
+- **Breaking: requires OpenCode v2.** The TUI plugin was ported to the v2 CLI
+  plugin API (`@opencode/plugin/tui`, `Plugin.define` + `setup`, the
+  `sidebar.content` slot, `ctx.ui.slot` / `ctx.data.on`, and the resolved theme
+  tokens). OpenCode v1 no longer loads it.
+- `ogr setup` and the `postinstall` hook now register the plugin in
+  `~/.config/opencode/cli.json` (the `plugins` array) instead of `tui.json`
+  (the v1 `plugin` array), matching OpenCode v2's single global CLI config.
+- `peerDependencies` now require `@opencode/plugin >=2 <3` and
+  `@opentui/core` / `@opentui/solid` `>=0.5.10`.
+
+### Removed
+
+- OpenCode v1 support (`@opencode-ai/plugin`, `tui.json` registration).
+
 ## [0.1.4] - 2026-10-08
 
 ### Fixed

@@ -17,7 +17,7 @@ Usage:
 
 Commands:
   show     Print the quota table (default)
-  setup    Register the OpenCode TUI plugin in your tui.json
+  setup    Register the OpenCode CLI plugin in your cli.json
            (safe and idempotent; run it if the install postinstall did not)
 
 Options:
@@ -85,8 +85,8 @@ async function main() {
     if (result.ok) {
       process.stdout.write(
         result.changed
-          ? `Registered the OpenCode TUI plugin in ${result.file}\n`
-          : `The OpenCode TUI plugin is already registered in ${result.file}\n`
+          ? `Registered the OpenCode CLI plugin in ${result.file}\n`
+          : `The OpenCode CLI plugin is already registered in ${result.file}\n`
       );
       return 0;
     }

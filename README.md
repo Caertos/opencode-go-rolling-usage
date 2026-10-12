@@ -110,8 +110,8 @@ If no key is found, run `opencode auth login` first.
 
 ## TUI plugin (sidebar widget)
 
-The package ships an OpenCode TUI plugin and registers it in your
-`~/.config/opencode/tui.json` automatically:
+The package ships an OpenCode **v2** CLI plugin and registers it in your
+`~/.config/opencode/cli.json` automatically:
 
 - **npm** — the `postinstall` hook registers it for you, so opening OpenCode is
   enough.
@@ -120,11 +120,11 @@ The package ships an OpenCode TUI plugin and registers it in your
 - **Homebrew** — run `ogr setup` once; Homebrew's sandbox prevents the formula
   from writing to your OpenCode config.
 
-`ogr setup` adds `opencode-go-rolling-usage` to the `plugin` array of `tui.json`
-(idempotent and safe; it never touches anything else). Then just restart
-OpenCode: the widget appears in the session sidebar and refreshes on every
-`session.idle` and every 90 seconds. It reads the same key sources as the CLI and
-**hides itself** when no key is configured.
+`ogr setup` adds `opencode-go-rolling-usage` to the `plugins` array of
+`cli.json` (idempotent and safe; it never touches anything else). Then just
+restart OpenCode: the widget appears in the session sidebar and refreshes on
+every `session.idle` and every 90 seconds. It reads the same key sources as the
+CLI and **hides itself** when no key is configured.
 
 ### If the plugin was not registered
 
@@ -141,13 +141,13 @@ ogr setup
 pnpm approve-builds           # pick opencode-go-rolling-usage, then reinstall
 ```
 
-Or add it by hand — edit `~/.config/opencode/tui.json` and put the package in the
-`plugin` array:
+Or add it by hand — edit `~/.config/opencode/cli.json` and put the package in
+the `plugins` array:
 
 ```json
 {
-  "$schema": "https://opencode.ai/tui.json",
-  "plugin": ["opencode-go-rolling-usage"]
+  "$schema": "https://opencode.ai/v2/cli.json",
+  "plugins": ["opencode-go-rolling-usage"]
 }
 ```
 
@@ -159,12 +159,12 @@ Then restart OpenCode.
 ogr setup
 ```
 
-**Undo:** remove `"opencode-go-rolling-usage"` from the `plugin` array, or delete
+**Undo:** remove `"opencode-go-rolling-usage"` from the `plugins` array, or delete
 the entry you added.
 
-Notes: `ogr setup` honors `OPENCODE_TUI_CONFIG` and `XDG_CONFIG_HOME`, only
-touches the `plugin` array, and leaves a `tui.jsonc` that contains comments
-untouched (it reports this instead of rewriting it).
+Notes: `ogr setup` honors `XDG_CONFIG_HOME`, only touches the `plugins` array,
+and leaves a `cli.json` that is not plain JSON untouched (it reports this instead
+of rewriting it).
 
 ## Development
 
@@ -211,7 +211,7 @@ src/
   usage.js    API key resolution + usage endpoint client
   render.js   terminal rendering (chalk)
   index.js    CLI entry point (bin)
-  tui.tsx     OpenCode TUI plugin (self-contained, single file)
+  tui.tsx     OpenCode v2 CLI plugin (self-contained, single file)
 test/
   format.test.js
   usage.test.js

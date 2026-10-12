@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // npm/pnpm postinstall hook.
 //
-// Registers the OpenCode TUI plugin in the user's tui.json so that opening
+// Registers the OpenCode CLI plugin in the user's cli.json so that opening
 // OpenCode is enough after installing. Best-effort and silent: it must never
 // break an install.
 //
