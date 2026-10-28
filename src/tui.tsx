@@ -211,8 +211,12 @@ function Row(props: { label: string; get: () => UsageWindow | undefined; palette
         <text fg={palette().muted}>{reset() ? `resets ${reset()}` : ""}</text>
       </box>
       <box flexDirection="row">
-        <text fg={color()}>{bars().filled}</text>
-        <text fg={palette().border}>{bars().empty}</text>
+        <text fg={color()} width={bars().filled.length} minWidth={0} flexShrink={0}>
+          {bars().filled}
+        </text>
+        <text fg={palette().border} width={bars().empty.length} minWidth={0} flexShrink={0}>
+          {bars().empty}
+        </text>
       </box>
     </box>
   )
