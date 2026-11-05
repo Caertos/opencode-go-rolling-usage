@@ -6,6 +6,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.1] - 2026-11-05
+
+### Fixed
+
+- The TUI plugin no longer crashes the `sidebar.content` slot on OpenCode 2.2.x
+  ("undefined is not an object (evaluating 'e.length')"). The theme adapter now
+  reads the current `ResolvedTheme` tokens (`text.base`, `text.muted`,
+  `text.feedback.*.base`, `background.raised.base`, `border.base`) instead of
+  the removed `text.default` / `text.subdued` / `background.surface.*` paths,
+  and validates every value before handing it to OpenTUI.
+- The widget renders an empty box instead of `undefined` while the usage state
+  is hidden, so the slot always produces valid output.
+
+### Changed
+
+- The palette helper moved to `src/palette.js` and ships as `dist/palette.js`
+  next to `dist/tui.js`, with unit tests for both the v1 flat theme and the v2
+  nested `ResolvedTheme`.
+
 ## [0.3.0] - 2026-10-11
 
 ### Added

@@ -11,12 +11,13 @@
  *   - v1: `tui(api)` registers a `sidebar_content` slot via
  *     `api.slots.register` and subscribes with `api.event.on`.
  *
- * It is intentionally self-contained (no local imports) and never imports the
- * plugin core package at runtime (neither `@opencode/plugin/tui` nor
- * `@opencode-ai/plugin/tui`), so the same file loads under both runtimes.
- * `Plugin.define` is an identity helper, so the exported object below is
- * exactly what v2 expects without the import. The same numbers and color scale
- * also live in src/format.js for the CLI.
+ * It never imports the plugin core package at runtime (neither
+ * `@opencode/plugin/tui` nor `@opencode-ai/plugin/tui`), so the same file loads
+ * under both runtimes. `Plugin.define` is an identity helper, so the exported
+ * object below is exactly what v2 expects without the import. The only local
+ * import is `./palette.js`, a pure helper that ships next to this file in
+ * `dist/`. The same numbers and color scale also live in src/format.js for the
+ * CLI.
  *
  * Register it in cli.json (v2) or tui.json (v1), by package name.
  */
@@ -25,6 +26,7 @@ import { createSignal, For, Show, type Accessor } from "solid-js"
 import { readFile } from "node:fs/promises"
 import { homedir } from "node:os"
 import { join } from "node:path"
+import { toPalette } from "./palette.js"
 
 const id = "opencode-go-rolling-usage"
 const ENDPOINT = "https://opencode.ai/zen/go/v1/usage"
@@ -156,32 +158,9 @@ function countdown(resetsAt: string | undefined, now: number): string {
   return `${minutes}m`
 }
 
-// v2 hands us the resolved theme (RGBA tokens); v1 used flat named tokens plus
-// hardcoded level colors. Normalise both into a single palette.
-function toPalette(theme: any): Palette {
-  if (theme && theme.text && theme.text.default !== undefined) {
-    return {
-      text: theme.text.default,
-      muted: theme.text.subdued,
-      border: theme.border.default,
-      bg: theme.background.surface.offset,
-      green: theme.text.feedback.success.default,
-      yellow: theme.text.feedback.warning.default,
-      orange: theme.hue.orange[700],
-      red: theme.text.feedback.error.default,
-    }
-  }
-  return {
-    text: theme?.text,
-    muted: theme?.textMuted,
-    border: theme?.border,
-    bg: theme?.backgroundElement,
-    green: "#3fb950",
-    yellow: "#e3b341",
-    orange: "#f0883e",
-    red: "#f85149",
-  }
-}
+// v2 hands us the resolved theme (nested RGBA tokens); v1 used flat named
+// tokens. `toPalette` normalises both and guarantees every value is a real
+// color, so a theme change can never make the widget crash the slot.
 
 function levelColor(percent: number, palette: Palette): any {
   const p = clamp(percent)
@@ -225,7 +204,7 @@ function GoUsageWidget(props: { snapshot: Accessor<Snapshot>; palette: Palette }
   const now = () => (snap().status === "ok" ? snap().at : Date.now())
 
   return (
-    <Show when={snap().status !== "hidden"}>
+    <Show when={snap().status !== "hidden"} fallback={<box />}>
       <box flexDirection="column">
         <box flexDirection="row">
           <text fg={palette().text}>Go usage</text>
